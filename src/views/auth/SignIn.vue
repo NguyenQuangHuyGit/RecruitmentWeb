@@ -146,14 +146,29 @@
                         <p>
                             Hãy đăng nhập để bắt đầu tìm kiếm việc làm ngày nào
                         </p>
-                        <Button label="Chưa có tài khoản" @click="test($event)" style="background-color: transparent; border-color: #fff;" />
+                        <Button
+                            label="Chưa có tài khoản"
+                            @click="test($event)"
+                            style="
+                                background-color: transparent;
+                                border-color: #fff;
+                            "
+                        />
                     </div>
                     <div class="overlay-panel overlay-right">
                         <h1>Chào bạn mới!</h1>
                         <p>
-                            Đăng ký thông tin tài khoản ngay để tìm kiếm việc làm mong muốn nhé
+                            Đăng ký thông tin tài khoản ngay để tìm kiếm việc
+                            làm mong muốn nhé
                         </p>
-                        <Button label="Đã có tài khoản" @click="test($event)" style="background-color: transparent; border-color: #fff;"/>
+                        <Button
+                            label="Đã có tài khoản"
+                            @click="test($event)"
+                            style="
+                                background-color: transparent;
+                                border-color: #fff;
+                            "
+                        />
                     </div>
                 </div>
             </div>
@@ -162,15 +177,20 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, inject } from "vue";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { z } from "zod";
 import AuthService from "@/services/authservice.js";
-import { useRoute } from 'vue-router';
+import { useRoute } from "vue-router";
 import router from "@/router";
+import { useToast } from "primevue/usetoast";
+
+const setLoading = inject("setLoading");
+
+const toast = useToast();
 
 const route = useRoute();
-const props = defineProps(['isSignIn'])
+const props = defineProps(["isSignIn"]);
 
 const isDelay = ref(true);
 const isSignIn = ref(props.isSignIn ?? false);
@@ -179,13 +199,13 @@ onMounted(() => {
     setTimeout(() => {
         isDelay.value = false;
     }, 500);
-})
+});
 
 const test = () => {
     isSignIn.value = !isSignIn.value;
     router.replace({
         path: route.path,
-        query: { isSignIn: isSignIn.value }
+        query: { isSignIn: isSignIn.value },
     });
 };
 
@@ -263,10 +283,46 @@ const resolver = zodResolver(signUpSchema);
 const onFormSubmit = async (e) => {
     if (e.valid) {
         try {
-            var response = await AuthService.signUp(signUpValues.value);
-            console.log(response);
+            setLoading(true);
+            await AuthService.signUp(signUpValues.value);
+            router.push({ name: 'main' });
+            toast.add({
+                severity: "success",
+                summary: "Thành công",
+                detail: "Bạn đã tạo thành công tài khoản",
+                life: 3000,
+            });
         } catch (error) {
+            if (error.status) {
+                switch (error.status) {
+                    case 409:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi nhập liệu",
+                            detail: "Email đã tồn tại",
+                            life: 3000,
+                        });
+                        break;
+                    default:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi hệ thống",
+                            detail: "Vui lòng thử lại sau ít phút",
+                            life: 3000,
+                        });
+                        break;
+                }
+            } else {
+                toast.add({
+                    severity: "error",
+                    summary: "Lỗi hệ thống",
+                    detail: "Vui lòng thử lại sau ít phút",
+                    life: 3000,
+                });
+            }
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     }
 };
@@ -274,10 +330,42 @@ const onFormSubmit = async (e) => {
 const onSignInFormSubmit = async ({ valid }) => {
     if (valid) {
         try {
-            var response = await AuthService.signIn(signInValues.value);
-            console.log(response); 
+            setLoading(true);
+            const requestModel = { ...signInValues.value };
+            requestModel.roleValid = "user";
+            await AuthService.signIn(requestModel);
+            router.push({ name: 'main' });
         } catch (error) {
+            if (error.status) {
+                switch (error.status) {
+                    case 400:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi nhập liệu",
+                            detail: "Tài khoản hoặc mật khẩu không đúng",
+                            life: 3000,
+                        });
+                        break;
+                    default:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi hệ thống",
+                            detail: "Vui lòng thử lại sau ít phút",
+                            life: 3000,
+                        });
+                        break;
+                }
+            } else {
+                toast.add({
+                    severity: "error",
+                    summary: "Lỗi hệ thống",
+                    detail: "Vui lòng thử lại sau ít phút",
+                    life: 3000,
+                });
+            }
             console.log(error);
+        } finally {
+            setLoading(false);
         }
     }
 };
@@ -293,7 +381,7 @@ const onSignInFormSubmit = async ({ valid }) => {
     align-items: center;
 }
 
-.overlay-template {
+.sign-in .overlay-template {
     position: absolute;
     top: 0;
     width: 100%;
@@ -446,7 +534,7 @@ input {
     }
 }
 
-.overlay-container {
+.sign-in .overlay-container {
     position: absolute;
     top: 0;
     left: 50%;
@@ -461,7 +549,7 @@ input {
     transform: translateX(-100%);
 }
 
-.overlay {
+.sign-in .overlay {
     background: #ff416c;
     background: linear-gradient(to right, #43e97b, #38f9d7);
     background-repeat: no-repeat;
@@ -480,7 +568,7 @@ input {
     transform: translateX(50%);
 }
 
-.overlay-panel {
+.sign-in .overlay-panel {
     position: absolute;
     display: flex;
     align-items: center;
@@ -496,19 +584,20 @@ input {
     transition: transform 0.6s ease-in-out;
 }
 
-.overlay-panel h1, .overlay-panel p {
+.sign-in .overlay-panel h1,
+.sign-in .overlay-panel p {
     font-family: Roboto-Medium;
 }
 
-.overlay-left {
+.sign-in .overlay-left {
     transform: translateX(-20%);
 }
 
-.container.right-panel-active .overlay-left {
+.sign-in .container.right-panel-active .overlay-left {
     transform: translateX(0);
 }
 
-.overlay-right {
+.sign-in .overlay-right {
     right: 0;
     transform: translateX(0);
 }

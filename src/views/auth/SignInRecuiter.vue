@@ -59,10 +59,16 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { inject, ref } from "vue";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { z } from "zod";
 import router from "@/router";
+import { useToast } from "primevue/usetoast";
+import AuthService from "@/services/authservice.js";
+
+const setLoading = inject('setLoading');
+
+const toast = useToast();
 
 const initialValues = ref({
     email: "",
@@ -83,6 +89,49 @@ const signInSchema = z.object({
 });
  
 const resolver = zodResolver(signInSchema);
+
+const onSignInFormSubmit = async ({ valid }) => {
+    if (valid) {
+        try {
+            setLoading(true);
+            const requestModel = { ...signInValues.value };
+            requestModel.roleValid = "recruiter";
+            await AuthService.signIn(requestModel);
+            router.push({ name: 'recruiter' });
+        } catch (error) {
+            if (error.status) {
+                switch (error.status) {
+                    case 400:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi nhập liệu",
+                            detail: "Tài khoản hoặc mật khẩu không đúng",
+                            life: 3000,
+                        });
+                        break;
+                    default:
+                        toast.add({
+                            severity: "error",
+                            summary: "Lỗi hệ thống",
+                            detail: "Vui lòng thử lại sau ít phút",
+                            life: 3000,
+                        });
+                        break;
+                }
+            } else {
+                toast.add({
+                    severity: "error",
+                    summary: "Lỗi hệ thống",
+                    detail: "Vui lòng thử lại sau ít phút",
+                    life: 3000,
+                });
+            }
+            console.log(error);
+        }finally{
+            setLoading(false);
+        }
+    }
+};
 </script>
 
 <style>

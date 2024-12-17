@@ -256,13 +256,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, inject } from "vue";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { z } from "zod";
 import router from "@/router";
 import ProvinceService from "@/services/provinceservice.js";
 import AuthService from "@/services/authservice.js";
 import { useToast } from "primevue/usetoast";
+const setLoading = inject('setLoading');
 
 const toast = useToast();
 
@@ -444,6 +445,7 @@ let resolver = computed(() => {
 const onFormSubmit = async ({ valid }) => {
     if (valid) {
         try {
+            setLoading(true);
             var data = {
                 fullName: signUpValues.value.fullName,
                 email: signUpValues.value.email,
@@ -451,8 +453,10 @@ const onFormSubmit = async ({ valid }) => {
                 phoneNumber: signUpValues.value.phoneNumber,
                 company: {
                     name: signUpValues.value.companyName,
-                    province: signUpValues.value.province.code,
-                    district: signUpValues.value.district.code,
+                    provinceId: signUpValues.value.province.code,
+                    provinceName: signUpValues.value.province.name,
+                    districtId: signUpValues.value.district.code,
+                    districtName: signUpValues.value.district.name,
                     address: signUpValues.value.address,
                 },
             };
@@ -463,6 +467,7 @@ const onFormSubmit = async ({ valid }) => {
                 detail: "Bạn đã tạo thành công tài khoản nhà tuyển dụng",
                 life: 3000,
             });
+            router.push({ name: 'recruiter' });
         } catch (error) {
             if (error.status) {
                 switch (error.status) {
@@ -492,6 +497,8 @@ const onFormSubmit = async ({ valid }) => {
                 });
             }
             console.log(error);
+        }finally {
+            setLoading(false);
         }
     }
 };

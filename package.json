@@ -11,6 +11,7 @@
   "dependencies": {
     "@primevue/forms": "^4.2.4",
     "@primevue/themes": "^4.2.3",
+    "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.7.8",
     "pinia": "^2.2.6",
     "primeicons": "^7.0.0",
