@@ -37,9 +37,9 @@
                 </div>
                 <div class="user-info">
                     <p style="font-family: Roboto-Bold; font-size: 1.1em">
-                        Nguyễn Quang Huy
+                        {{ authContext.user.fullName }}
                     </p>
-                    <p style="font-size: 0.8em">INTERN DEVELOPER</p>
+                    <p style="font-size: 0.8em">{{ authContext.user.position.toUpperCase() }}</p>
                 </div>
             </div>
             <div class="nav-list">
@@ -60,17 +60,6 @@
                             ></i>
                         </div>
                         <p>Công việc của tôi</p>
-                    </div>
-                </router-link>
-                <router-link style="text-decoration: none; color: #000" :to="{ name: 'list-company' }">
-                    <div class="nav-item">
-                        <div>
-                            <i
-                                class="pi pi-building"
-                                style="color: #708090"
-                            ></i>
-                        </div>
-                        <p>Danh sách công ty</p>
                     </div>
                 </router-link>
             </div>
@@ -133,6 +122,9 @@
 import { useTemplateRef, ref, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { RouterLink, RouterView } from "vue-router";
+import { useUserStore } from "@/stores/counter";
+
+const authContext = useUserStore();
 const router = useRouter();
 const setLoading = inject("setLoading");
 </script>

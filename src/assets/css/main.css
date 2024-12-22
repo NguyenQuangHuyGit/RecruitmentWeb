@@ -24,11 +24,11 @@ button {
 }
 
 .flex {
-    display: flex;
+    display: flex !important;
 }
 
 .flex-column {
-    flex-direction: column;
+    flex-direction: column !important;
 }
 
 .justify-center {
@@ -44,7 +44,7 @@ button {
 }
 
 .align-center {
-    align-items: center;
+    align-items: center !important;
 }
 
 .gap-1 {

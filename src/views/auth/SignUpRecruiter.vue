@@ -13,8 +13,8 @@
                 <div class="control-container">
                     <Form
                         v-slot="$form"
-                        :initialValues
-                        :resolver
+                        :initialValues="initialValues"
+                        :resolver="resolver"
                         @submit="onFormSubmit"
                         style="display: flex; flex-direction: column; gap: 16px"
                     >
@@ -496,7 +496,6 @@ const onFormSubmit = async ({ valid }) => {
                     life: 3000,
                 });
             }
-            console.log(error);
         }finally {
             setLoading(false);
         }

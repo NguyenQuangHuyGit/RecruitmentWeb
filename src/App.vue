@@ -1,17 +1,41 @@
 <script setup>
-import { provide, ref } from "vue";
+import { onBeforeMount, onErrorCaptured, provide, ref } from "vue";
 import { RouterLink, RouterView } from "vue-router";
+import { useUserStore } from "@/stores/counter";
+import { useToast } from "primevue/usetoast";
 const isLoading = ref(false);
-
+const authContext = useUserStore();
 const setLoading = (value) => {
     isLoading.value = value;
 };
 
 provide("setLoading", setLoading);
+
+onBeforeMount(async () => {
+    setLoading(true);
+    await authContext.getUser(() => {
+        setLoading(false);
+    });
+});
+
+onErrorCaptured((err, instance, info) => {
+    console.log(err);
+    const toast = useToast();
+    toast.add({
+        severity: "error",
+        summary: "Lỗi hệ thống",
+        detail: "Vui lòng thử lại sau ít phút",
+        life: 3000,
+    });
+    setLoading(false);
+    return false;
+});
 </script>
 
 <template>
-    <RouterView name="root" />
+    <error-boundary>
+        <RouterView name="root" />
+    </error-boundary>
     <Toast />
     <div class="overlay" v-if="isLoading">
         <ProgressSpinner

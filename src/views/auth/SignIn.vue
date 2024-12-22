@@ -7,8 +7,8 @@
                 <div class="form-control">
                     <Form
                         v-slot="$form"
-                        :initialValues
-                        :resolver
+                        :initialValues="initialValues"
+                        :resolver="resolver"
                         @submit="onFormSubmit"
                         style="display: flex; flex-direction: column; gap: 16px"
                     >
@@ -184,6 +184,9 @@ import AuthService from "@/services/authservice.js";
 import { useRoute } from "vue-router";
 import router from "@/router";
 import { useToast } from "primevue/usetoast";
+import { useUserStore } from '@/stores/counter';
+
+const authContext = useUserStore();
 
 const setLoading = inject("setLoading");
 
@@ -292,6 +295,7 @@ const onFormSubmit = async (e) => {
                 detail: "Bạn đã tạo thành công tài khoản",
                 life: 3000,
             });
+            await authContext.getUser();
         } catch (error) {
             if (error.status) {
                 switch (error.status) {
@@ -320,7 +324,6 @@ const onFormSubmit = async (e) => {
                     life: 3000,
                 });
             }
-            console.log(error);
         } finally {
             setLoading(false);
         }
@@ -334,6 +337,7 @@ const onSignInFormSubmit = async ({ valid }) => {
             const requestModel = { ...signInValues.value };
             requestModel.roleValid = "user";
             await AuthService.signIn(requestModel);
+            await authContext.getUser();
             router.push({ name: 'main' });
         } catch (error) {
             if (error.status) {
@@ -363,7 +367,6 @@ const onSignInFormSubmit = async ({ valid }) => {
                     life: 3000,
                 });
             }
-            console.log(error);
         } finally {
             setLoading(false);
         }

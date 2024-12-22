@@ -112,8 +112,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row google-map-container">
-            </div>
+            <div class="row google-map-container"></div>
             <div class="row recruiment-second-info">
                 <p style="font-family: Roboto-Medium; font-size: 1.3em">
                     Thông tin chung
@@ -286,16 +285,10 @@ const data = ref({});
 const detail = useTemplateRef("detail");
 
 onBeforeMount(async () => {
-    try {
+    if (props.id) {
         setLoading(true);
-        if (props.id) {
-            const response = await RecruitmentService.getById(props.id);
-            data.value = { ...response };
-            console.log(response);
-        }
-    } catch (error) {
-        console.log(error);
-    } finally {
+        const response = await RecruitmentService.getById(props.id);
+        data.value = { ...response };
         setLoading(false);
     }
 });
@@ -313,21 +306,16 @@ onBeforeUpdate(() => {
 });
 
 const handleApplyRecruit = async () => {
-    try {
-        setLoading(true);
-        const payload = { recruitmentId: data.value.id };
-        await RecruitmentService.createUserRecruitment(payload);
-        toast.add({
-            severity: "success",
-            summary: "Thành công",
-            detail: "Nộp đơn ứng tuyển thành công",
-            life: 3000,
-        });
-    } catch (error) {
-        console.log(error);
-    } finally {
-        setLoading(false);
-    }
+    setLoading(true);
+    const payload = { recruitmentId: data.value.id };
+    await RecruitmentService.createUserRecruitment(payload);
+    setLoading(false);
+    toast.add({
+        severity: "success",
+        summary: "Thành công",
+        detail: "Nộp đơn ứng tuyển thành công",
+        life: 3000,
+    });
 };
 
 const handleSalaryData = () => {
@@ -335,9 +323,13 @@ const handleSalaryData = () => {
     if (data.value.salaryType === 0) {
         return "Thỏa thuận";
     } else if (data.value.salaryType === 1) {
-        return `${Common.formatNumberWithDots(data.value.fromSalary)} - ${Common.formatNumberWithDots(data.value.toSalary)} ${currency}`;
+        return `${Common.formatNumberWithDots(
+            data.value.fromSalary
+        )} - ${Common.formatNumberWithDots(data.value.toSalary)} ${currency}`;
     } else {
-        return `${Common.formatNumberWithDots(data.value.fromSalary)} ${currency}`;
+        return `${Common.formatNumberWithDots(
+            data.value.fromSalary
+        )} ${currency}`;
     }
 };
 

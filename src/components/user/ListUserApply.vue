@@ -46,7 +46,7 @@
                     </template>
                 </Column>
                 <Column header="Xem chi tiết hồ sơ" style="width: 20%">
-                    <template #body="slotProps">
+                    <template #body="">
                         <div>
                             <Button
                                 type="button"

@@ -3,7 +3,7 @@
         <Form
             v-slot="$form"
             v-model:initialValues="initialValues"
-            :resolver
+            :resolver="resolver"
             @submit="onFormSubmit"
             style="display: flex; flex-direction: column; gap: 16px"
         >

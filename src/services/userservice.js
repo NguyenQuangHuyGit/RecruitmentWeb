@@ -6,6 +6,11 @@ class UserService extends BaseService {
         var response = await axios.get(this.baseUrl + `recruiter?RecruitmentId=${id}`, { withCredentials: true });
         return response.data;
     }
+
+    async getByUser(){
+        var response = await axios.get(this.baseUrl, { withCredentials: true });
+        return response.data;
+    }
 }
 
 export default new UserService('User');
