@@ -34,6 +34,10 @@ const Common = {
     },
 
     formatNumberWithDots(number) {
+        if (!number) {
+            return "";
+        }
+        
         const numString = number.toString();
       
         // Tách phần nguyên và phần thập phân

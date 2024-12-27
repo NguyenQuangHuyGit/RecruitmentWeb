@@ -4,7 +4,7 @@
             <p>Việc làm của tôi</p>
         </div>
         <div class="body">
-            <Tabs value="0">
+            <Tabs v-model:value="tabActive">
                 <TabList>
                     <Tab
                         value="0"
@@ -31,7 +31,12 @@
                 >
                     <TabPanel value="0">
                         <div class="recruitment-list-container">
-                            <div class="recruitment-item">
+                            <div
+                                class="recruitment-item"
+                                v-for="item in recuitments"
+                                :key="item.id"
+                                @click="handleRecruitmentClick(item)"
+                            >
                                 <div class="company-avatar">
                                     <img
                                         src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
@@ -43,9 +48,13 @@
                                         style="
                                             font-family: Roboto-Medium;
                                             font-size: 1.2em;
+                                            text-wrap: nowrap;
+                                            text-overflow: ellipsis;
+                                            overflow: hidden;
+                                            padding-right: 10px;
                                         "
                                     >
-                                        Chuyên viên triển khai phần mềm
+                                        {{ item.title }}
                                     </p>
                                     <p
                                         style="
@@ -53,7 +62,7 @@
                                             font-size: 0.8em;
                                         "
                                     >
-                                        1c Vietnam LLC
+                                        {{ item.company.name }}
                                     </p>
                                     <p
                                         style="
@@ -61,13 +70,15 @@
                                             font-size: 0.8em;
                                         "
                                     >
-                                        Hà Nội
+                                        {{ handleProvinceData(item) }}
                                     </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
+                                    <p style="font-size: 0.8em">
+                                        {{ handleSalaryData(item) }}
+                                    </p>
                                 </div>
                                 <div
                                     class="recruitment-status-info"
-                                    @click.stop="toggle($event)"
+                                    @click.stop="displayRecruit($event, item)"
                                 >
                                     <i
                                         class="pi pi-info-circle"
@@ -80,7 +91,12 @@
                     </TabPanel>
                     <TabPanel value="1">
                         <div class="recruitment-list-container">
-                            <div class="recruitment-item">
+                            <div
+                                class="recruitment-item"
+                                v-for="(item, index) in saveRecruiment"
+                                :key="item.id"
+                                @click="handleRecruitmentClick(item)"
+                            >
                                 <div class="company-avatar">
                                     <img
                                         src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
@@ -92,9 +108,13 @@
                                         style="
                                             font-family: Roboto-Medium;
                                             font-size: 1.2em;
+                                            text-wrap: nowrap;
+                                            text-overflow: ellipsis;
+                                            overflow: hidden;
+                                            padding-right: 10px;
                                         "
                                     >
-                                        Chuyên viên triển khai phần mềm
+                                        {{ item.title }}
                                     </p>
                                     <p
                                         style="
@@ -102,7 +122,7 @@
                                             font-size: 0.8em;
                                         "
                                     >
-                                        1c Vietnam LLC
+                                        {{ item.company.name }}
                                     </p>
                                     <p
                                         style="
@@ -110,235 +130,27 @@
                                             font-size: 0.8em;
                                         "
                                     >
-                                        Hà Nội
+                                        {{ handleProvinceData(item) }}
                                     </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
+                                    <p style="font-size: 0.8em">
+                                        {{ handleSalaryData(item) }}
+                                    </p>
                                 </div>
                                 <div
                                     class="recruitment-control-save"
                                     v-tooltip.top="'Lưu tin tuyển dụng'"
+                                    @click.stop="handleSaveRecruiment(item, index)"
                                 >
                                     <i
-                                        class="pi pi-heart"
+                                        v-if="item.isSaveByUser"
+                                        class="pi pi-heart-fill"
                                         style="
                                             color: #31c593;
                                             font-size: 1.2rem;
                                         "
                                     ></i>
-                                </div>
-                                <Button
-                                    label="Ứng tuyển"
-                                    style="
-                                        position: absolute;
-                                        bottom: 10px;
-                                        right: 10px;
-                                    "
-                                />
-                            </div>
-                            <div class="recruitment-item">
-                                <div class="company-avatar">
-                                    <img
-                                        src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="recruitment-info">
-                                    <p
-                                        style="
-                                            font-family: Roboto-Medium;
-                                            font-size: 1.2em;
-                                        "
-                                    >
-                                        Chuyên viên triển khai phần mềm
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        1c Vietnam LLC
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        Hà Nội
-                                    </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
-                                </div>
-                                <div
-                                    class="recruitment-control-save"
-                                    v-tooltip.top="'Lưu tin tuyển dụng'"
-                                >
                                     <i
-                                        class="pi pi-heart"
-                                        style="
-                                            color: #31c593;
-                                            font-size: 1.2rem;
-                                        "
-                                    ></i>
-                                </div>
-                                <Button
-                                    label="Ứng tuyển"
-                                    style="
-                                        position: absolute;
-                                        bottom: 10px;
-                                        right: 10px;
-                                    "
-                                />
-                            </div>
-                            <div class="recruitment-item">
-                                <div class="company-avatar">
-                                    <img
-                                        src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="recruitment-info">
-                                    <p
-                                        style="
-                                            font-family: Roboto-Medium;
-                                            font-size: 1.2em;
-                                        "
-                                    >
-                                        Chuyên viên triển khai phần mềm
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        1c Vietnam LLC
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        Hà Nội
-                                    </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
-                                </div>
-                                <div
-                                    class="recruitment-control-save"
-                                    v-tooltip.top="'Lưu tin tuyển dụng'"
-                                >
-                                    <i
-                                        class="pi pi-heart"
-                                        style="
-                                            color: #31c593;
-                                            font-size: 1.2rem;
-                                        "
-                                    ></i>
-                                </div>
-                                <Button
-                                    label="Ứng tuyển"
-                                    style="
-                                        position: absolute;
-                                        bottom: 10px;
-                                        right: 10px;
-                                    "
-                                />
-                            </div>
-                            <div class="recruitment-item">
-                                <div class="company-avatar">
-                                    <img
-                                        src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="recruitment-info">
-                                    <p
-                                        style="
-                                            font-family: Roboto-Medium;
-                                            font-size: 1.2em;
-                                        "
-                                    >
-                                        Chuyên viên triển khai phần mềm
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        1c Vietnam LLC
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        Hà Nội
-                                    </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
-                                </div>
-                                <div
-                                    class="recruitment-control-save"
-                                    v-tooltip.top="'Lưu tin tuyển dụng'"
-                                >
-                                    <i
-                                        class="pi pi-heart"
-                                        style="
-                                            color: #31c593;
-                                            font-size: 1.2rem;
-                                        "
-                                    ></i>
-                                </div>
-                                <Button
-                                    label="Ứng tuyển"
-                                    style="
-                                        position: absolute;
-                                        bottom: 10px;
-                                        right: 10px;
-                                    "
-                                />
-                            </div>
-                            <div class="recruitment-item">
-                                <div class="company-avatar">
-                                    <img
-                                        src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="recruitment-info">
-                                    <p
-                                        style="
-                                            font-family: Roboto-Medium;
-                                            font-size: 1.2em;
-                                        "
-                                    >
-                                        Chuyên viên triển khai phần mềm
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        1c Vietnam LLC
-                                    </p>
-                                    <p
-                                        style="
-                                            color: rgb(119, 119, 119);
-                                            font-size: 0.8em;
-                                        "
-                                    >
-                                        Hà Nội
-                                    </p>
-                                    <p style="font-size: 0.8em">Thương lượng</p>
-                                </div>
-                                <div
-                                    class="recruitment-control-save"
-                                    v-tooltip.top="'Lưu tin tuyển dụng'"
-                                >
-                                    <i
+                                        v-else
                                         class="pi pi-heart"
                                         style="
                                             color: #31c593;
@@ -365,12 +177,12 @@
         <div class="recruitment-status-container">
             <Timeline :value="events">
                 <template #opposite="slotProps">
-                    <small>{{
+                    <small v-if="slotProps.item.active">{{
                         slotProps.item.date
                     }}</small>
                 </template>
                 <template #content="slotProps">
-                    {{ slotProps.item.status }}
+                    {{ slotProps.item.active ? slotProps.item.status : "" }}
                 </template>
             </Timeline>
         </div>
@@ -378,34 +190,139 @@
 </template>
 
 <script setup>
-import { useTemplateRef, ref } from "vue";
+import {
+    useTemplateRef,
+    ref,
+    onBeforeMount,
+    watch,
+    nextTick,
+    inject,
+    computed,
+} from "vue";
+import recruitmentservice from "@/services/recruitmentservice";
+import { useRouter, useRoute } from "vue-router";
+import Common from "@/helper/common.js";
+
+const router = useRouter();
+const setLoading = inject("setLoading");
 
 const op = useTemplateRef("op");
 
-const toggle = (event) => {
-    op.value.toggle(event);
+const selectedRecruitmentTemp = ref();
+
+const handleHideOp = () => {
+    selectedRecruitmentTemp.value = null;
+    op.value.hide();
 };
 
-const events = ref([
-    {
-        status: "Ứng tuyển",
-        date: "15/10/2020 10:30",
-        icon: "pi pi-shopping-cart",
-        color: "#9C27B0",
-    },
-    {
-        status: "NTD xem hồ sơ",
-        date: "15/10/2020 14:00",
-        icon: "pi pi-cog",
-        color: "#673AB7",
-    },
-    {
-        status: "NTD đánh giá hồ sơ",
-        date: "15/10/2020 16:15",
-        icon: "pi pi-shopping-cart",
-        color: "#FF9800",
-    },
-]);
+const displayRecruit = async (e, data) => {
+    handleHideOp();
+    selectedRecruitmentTemp.value = data;
+    nextTick(() => {
+        op.value.show(e);
+    });
+};
+
+const recuitments = ref();
+
+const saveRecruiment = ref();
+
+const tabActive = ref("0");
+
+watch(tabActive, async (value) => {
+    setLoading(true);
+    if (value === "0") {
+        var response = await recruitmentservice.getUserRecruitment();
+        recuitments.value = { ...response };
+    } else {
+        var response = await recruitmentservice.getSaveRecruitment();
+        saveRecruiment.value = { ...response };
+    }
+    setLoading(false);
+});
+
+onBeforeMount(async () => {
+    setLoading(true);
+    var response = await recruitmentservice.getUserRecruitment();
+    recuitments.value = { ...response };
+    console.log(recuitments.value);
+    setLoading(false);
+});
+
+const handleRecruitmentClick = (data) => {
+    router.push({ name: "recruiter-detail", params: { id: data.id } });
+};
+
+const handleSalaryData = (data) => {
+    var currency = data.moneyType === 0 ? "VNĐ" : "USD";
+    if (data.salaryType === 0) {
+        return "Thỏa thuận";
+    } else if (data.salaryType === 1) {
+        return `${Common.formatNumberWithDots(
+            data.fromSalary
+        )} - ${Common.formatNumberWithDots(data.toSalary)} ${currency}`;
+    } else {
+        return `${Common.formatNumberWithDots(data.fromSalary)} ${currency}`;
+    }
+};
+
+const handleProvinceData = (data) => {
+    if (data.isDifferentAddess) {
+        return data.company.provinceName;
+    } else {
+        return data.provinceName;
+    }
+};
+
+const handleSaveRecruiment = async (data, index) => {
+    await recruitmentservice.saveRecruitment(data.id);
+    saveRecruiment.value[index].isSaveByUser = !data.isSaveByUser;
+    if (data.isSaveByUser) {
+        toast.add({
+            severity: "success",
+            summary: "Lưu tin thành công",
+            detail: "Truy cập: Việc làm của bạn >> Công việc của tôi >> Việc đã lưu để xem danh sách",
+            life: 3000,
+        });
+    }
+}
+
+const events = computed(() => {
+    const result = [
+        {
+            status: "Ứng tuyển",
+            date: Common.formatDate(
+                selectedRecruitmentTemp.value.userRecruitment.applyDate
+            ).result,
+            active: true,
+        },
+    ];
+
+    if (selectedRecruitmentTemp.value.userRecruitment.status >= 1) {
+        result.push({
+            status: "NTD xem hồ sơ",
+            date: Common.formatDate(
+                selectedRecruitmentTemp.value.userRecruitment.openCvDate
+            ).result,
+            active:
+                selectedRecruitmentTemp.value.userRecruitment.openCvDate !==
+                null,
+        });
+    }
+
+    if (selectedRecruitmentTemp.value.userRecruitment.status >= 2) {
+        result.push({
+            status: "NTD đánh giá hồ sơ",
+            date: Common.formatDate(
+                selectedRecruitmentTemp.value.userRecruitment.changeStateDate
+            ).result,
+            active:
+                selectedRecruitmentTemp.value.userRecruitment
+                    .changeStateDate !== null,
+        });
+    }
+    return result;
+});
 </script>
 
 <style>
@@ -480,6 +397,7 @@ const events = ref([
     display: flex;
     flex-direction: column;
     gap: 6px;
+    overflow: hidden;
 }
 
 .recruitment-list-container
@@ -520,9 +438,13 @@ const events = ref([
     z-index: 10;
 }
 
+.user-popover {
+    width: 270px;
+}
+
 .user-popover.p-popover::before,
 .user-popover.p-popover::after {
-  transform: translateX(-5px) !important;
+    transform: translateX(-5px) !important;
 }
 
 .user-popover.p-popover {

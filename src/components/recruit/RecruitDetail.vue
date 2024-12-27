@@ -17,7 +17,8 @@
                         rounded
                     ></Tag>
                     <Tag
-                        :value="`Địa điểm: ${data.provinceName}`"
+                        v-if="data.provinceName"
+                        :value="`Địa điểm: ${data.provinceName ?? ''}`"
                         severity="secondary"
                         rounded
                     ></Tag>
@@ -35,8 +36,15 @@
                         @click="handleApplyRecruit"
                     />
                     <Button
+                        v-if="!data.isSaveByUser"
                         label="Lưu tin"
                         icon="pi pi-heart"
+                        style="min-width: 150px"
+                    />
+                    <Button
+                        v-else
+                        label="Bỏ lưu tin"
+                        outlined
                         style="min-width: 150px"
                     />
                 </div>
@@ -112,7 +120,16 @@
                     </div>
                 </div>
             </div>
-            <div class="row google-map-container"></div>
+            <div class="row google-map-container">
+                <GoogleMap
+                    :api-key="apiKey"
+                    style="width: 100%; height: 100%"
+                    :center="center"
+                    :zoom="15"
+                >
+                    <Marker :options="{ position: center }" />
+                </GoogleMap>
+            </div>
             <div class="row recruiment-second-info">
                 <p style="font-family: Roboto-Medium; font-size: 1.3em">
                     Thông tin chung
@@ -273,6 +290,10 @@ import {
 import RecruitmentService from "@/services/recruitmentservice.js";
 import Common from "@/helper/common.js";
 import { useToast } from "primevue/usetoast";
+import { GoogleMap, Marker } from "vue3-google-map";
+
+const apiKey = "AIzaSyANyLPiyzlvtu0Isph5IYSv6AIWWclVKkU";
+const center = { lat: 21.0029075, lng: 105.863402 };
 
 const setLoading = inject("setLoading");
 
@@ -294,15 +315,17 @@ onBeforeMount(async () => {
 });
 
 onBeforeUpdate(() => {
-    const element = document.createElement("div");
-    element.classList.add("content-container");
-    element.innerHTML = `
+    if (data.value.content && detail.value) {
+        const element = document.createElement("div");
+        element.classList.add("content-container");
+        element.innerHTML = `
             <p style="font-family: Roboto-Medium; font-size: 1.4em; margin-bottom: 20px;">Thông tin chi tiết tuyển dụng</p>
             <div class="content-detail">
                 ${data.value.content}
             </div>
         `;
-    detail.value.append(element);
+        detail.value.append(element);
+    }
 });
 
 const handleApplyRecruit = async () => {
@@ -556,5 +579,6 @@ const handleExperienceData = () => {
     height: 300px;
     background-color: #fff;
     border-radius: 8px;
+    padding: 16px;
 }
 </style>

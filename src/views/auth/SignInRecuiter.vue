@@ -9,8 +9,8 @@
             <div class="control-container">
                 <Form
                     v-slot="$form"
-                    :initialValues
-                    :resolver
+                    :initialValues="initialValues"
+                    :resolver="resolver"
                     @submit="onSignInFormSubmit"
                     style="display: flex; flex-direction: column; gap: 16px"
                 >
@@ -97,7 +97,7 @@ const onSignInFormSubmit = async ({ valid }) => {
             const requestModel = { ...signInValues.value };
             requestModel.roleValid = "recruiter";
             await AuthService.signIn(requestModel);
-            router.push({ name: 'recruiter' });
+            router.push({ name: 'recruiter-mannage' });
         } catch (error) {
             if (error.status) {
                 switch (error.status) {

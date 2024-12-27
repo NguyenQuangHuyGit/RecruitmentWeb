@@ -51,7 +51,7 @@
                         severity="contrast"
                         @click="$router.push({ name: 'recruiter-sign-in' })"
                     />
-                    <div class="notification">
+                    <div class="notification" v-if="authContext.isAuthenticated">
                         <OverlayBadge value="2" size="small">
                             <i
                                 class="pi pi-bell"

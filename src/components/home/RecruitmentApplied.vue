@@ -14,7 +14,9 @@
                     <i class="pi pi-sign-out" style="color: #ffffff"></i>
                 </div>
                 <div class="avatar">
+                    <img :src="authContext.user.avatarPath" alt="" v-if="authContext.user.avatarPath" />
                     <svg
+                        v-else
                         width="90"
                         height="90"
                         viewBox="0 0 110 110"
@@ -174,6 +176,26 @@ const setLoading = inject("setLoading");
     height: 85px;
     border-radius: 50%;
     background-color: #fff;
+    position: relative;
+}
+
+.recruitment-applied-left .account-info .avatar img {
+    position: absolute;
+    inset: 0px;
+    box-sizing: border-box;
+    padding: 0px;
+    border: none;
+    margin: auto;
+    display: block;
+    width: 0px;
+    height: 0px;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 50%;
 }
 
 .recruitment-applied-left .account-info .user-info {
@@ -216,7 +238,7 @@ const setLoading = inject("setLoading");
 
 .recruitment-applied-center {
     flex: 1;
-    /* background-color: #f1f2f4; */
+    width: 50%;
     border-radius: 8px;
     height: fit-content;
 }

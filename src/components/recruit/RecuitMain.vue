@@ -7,6 +7,7 @@
                     <InputText
                         v-model="filterValue"
                         placeholder="Tìm kiếm theo tên tin tuyển dụng"
+                        @keypress.enter="reloadData"
                     />
                 </IconField>
                 <MultiSelect
@@ -32,6 +33,7 @@
                     :manualInput="false"
                     showButtonBar
                     placeholder="Chọn hạn ứng tuyển"
+                    dateFormat="dd/mm/yy"
                 />
                 <Button
                     icon="pi pi-refresh"
@@ -54,14 +56,17 @@
                     @hide="selectedRecruitment = null"
                 />
                 <DataTable
-                    :data-key="id"
                     :value="recruitments"
                     tableStyle="min-width: 50rem; cursor: pointer"
                     contextMenu
                     v-model:contextMenuSelection="selectedRecruitment"
                     @rowContextmenu="onRowContextMenu"
                 >
-                    <Column field="title" header="Vị trí đăng tuyển" style="width: 25%"></Column>
+                    <Column
+                        field="title"
+                        header="Vị trí đăng tuyển"
+                        style="width: 25%"
+                    ></Column>
                     <Column field="fieldName" header="Lĩnh vực"></Column>
                     <Column field="salary" header="Lương" style="width: 20%">
                         <template #body="slotProps">
@@ -123,24 +128,30 @@
         </Suspense>
     </div>
     <Popover ref="op">
-        <div
-            v-if="selectedRecruitmentTemp"
-            class="popover-container"
-        >
+        <div v-if="selectedRecruitmentTemp" class="popover-container">
             <div class="apply-information">
                 <div>Số lượng ứng viên đã ứng tuyển:</div>
                 <strong>{{ selectedRecruitmentTemp.totalUserApplied }}</strong>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <div>Trạng thái: </div>
-                <div style="color: #10b981">{{ selectedRecruitmentTemp.isActive ? 'Kích hoạt' : 'Tạm ẩn' }}</div>
+            <div style="display: flex; gap: 10px; align-items: center">
+                <div>Trạng thái:</div>
+                <div style="color: #10b981">
+                    {{
+                        selectedRecruitmentTemp.isActive
+                            ? "Kích hoạt"
+                            : "Tạm ẩn"
+                    }}
+                </div>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="display: flex; gap: 10px; align-items: center">
                 <div>Thay đổi trạng thái:</div>
                 <ToggleSwitch v-model="selectedRecruitmentTemp.isActive" />
             </div>
             <div class="apply-control">
-                <Button label="Xem danh sách ứng viên" @click="handleShowListUser"/>
+                <Button
+                    label="Xem danh sách ứng viên"
+                    @click="handleShowListUser"
+                />
             </div>
         </div>
     </Popover>
@@ -212,8 +223,11 @@ const displayRecruit = async (e, data) => {
 };
 
 const handleShowListUser = () => {
-    router.push({ name: 'user-list', params: { id: selectedRecruitmentTemp.value.id } })
-}
+    router.push({
+        name: "user-list",
+        params: { id: selectedRecruitmentTemp.value.id },
+    });
+};
 
 const handleHideForm = () => {
     visible.value = false;
@@ -267,12 +281,13 @@ onBeforeMount(async () => {
         setLoading(true);
         var response = await FieldService.getAll();
         fields.value = [...response];
+
         var queryModel = {
             name: filterValue.value,
-            fieldIds: [],
+            fieldId: [],
             startDate: null,
             endDate: null,
-        }
+        };
 
         response = await RecruitmentService.getByRecruiter(queryModel);
         recruitments.value = [...response];
@@ -288,10 +303,14 @@ const reloadData = async () => {
         setLoading(true);
         var queryModel = {
             name: filterValue.value,
-            fieldIds: [],
-            startDate: null,
-            endDate: null,
-        }
+            fieldId: selectedCities.value.map((x) => x.id),
+            startDate: dateRange.value
+                ? Common.convertToUTC(dateRange.value[0])
+                : null,
+            endDate: dateRange.value
+                ? Common.convertToUTC(dateRange.value[1])
+                : null,
+        };
         var response = await RecruitmentService.getByRecruiter(queryModel);
         recruitments.value = [...response];
     } catch (error) {
@@ -309,7 +328,11 @@ const handlerSalaryData = (data) => {
     if (data.salaryType == 0) {
         return "Thỏa thuận";
     } else if (data.salaryType == 1) {
-        return `Từ ${Common.formatNumberWithDots(data.fromSalary)} ${currency} đến ${Common.formatNumberWithDots(data.toSalary)} ${currency}`;
+        return `Từ ${Common.formatNumberWithDots(
+            data.fromSalary
+        )} ${currency} đến ${Common.formatNumberWithDots(
+            data.toSalary
+        )} ${currency}`;
     } else {
         return `${Common.formatNumberWithDots(data.fromSalary)} ${currency}`;
     }

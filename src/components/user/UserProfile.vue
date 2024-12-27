@@ -2,7 +2,9 @@
     <div class="user-profile-container">
         <div class="user-main-infor">
             <div class="avatar">
+                <img :src="srcAvatar" alt="" v-if="srcAvatar" />
                 <svg
+                    v-else
                     xmlns="http://www.w3.org/2000/svg"
                     width="120"
                     height="120"
@@ -368,7 +370,7 @@ const user = ref({
 
 const userForm = ref({ ...authContext.user });
 
-const srcAvatar = ref(null);
+const srcAvatar = ref(authContext.user.avatarPath ?? null);
 
 async function onFileSelect(event) {
     const file = event.files[0];
@@ -385,12 +387,13 @@ async function onFileSelect(event) {
         const formData = new FormData();
         formData.append("file", file);
         await fileservice.upload(0, formData);
+        authContext.getUser(null, true);
     }
 }
 
-// onBeforeMount(() => {
-//     changeToVN();
-// });
+onBeforeMount(() => {
+    console.log(authContext.user);
+});
 
 const menuConfigAccount = useTemplateRef("menuConfigAccount");
 const items = ref([
@@ -444,7 +447,6 @@ const handleOpenEditInfoForm = () => {
 const handleCloseInforForm = (value) => {
     if (!value) {
         userForm.value = { ...user.value };
-        console.log(userForm.value.dateOfBirth);
     }
 };
 
@@ -489,6 +491,7 @@ const handleOpenMap = () => {
     padding: 10px;
     gap: 10px;
     position: relative;
+    align-items: center;
 }
 
 .user-profile-container .user-main-infor .avatar {
@@ -498,11 +501,32 @@ const handleOpenMap = () => {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .user-profile-container .user-main-infor .avatar svg {
     fill: #eee;
 }
+
+.user-profile-container .user-main-infor .avatar img {
+    position: absolute;
+    inset: 0px;
+    box-sizing: border-box;
+    padding: 0px;
+    border: none;
+    margin: auto;
+    display: block;
+    width: 0px;
+    height: 0px;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 50%;
+}
+
 
 .user-profile-container .user-main-infor .content {
     display: flex;
@@ -661,7 +685,8 @@ const handleOpenMap = () => {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 16px;  
+    height: max-content;
 }
 
 .main-info-form-container .fisrt-container {
@@ -674,6 +699,7 @@ const handleOpenMap = () => {
 .main-info-form-container .user-avatar {
     width: 120px;
     height: 120px;
+    position: relative;
 }
 
 .main-info-form-container .user-avatar svg {
@@ -681,9 +707,23 @@ const handleOpenMap = () => {
 }
 
 .main-info-form-container .user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    position: absolute;
+    inset: 0px;
+    box-sizing: border-box;
+    padding: 0px;
+    border: none;
+    margin: auto;
+    display: block;
+    width: 0px;
+    height: 0px;
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 50%;
+    margin-bottom: 10px;
 }
 
 .main-info-form-container .user-info {

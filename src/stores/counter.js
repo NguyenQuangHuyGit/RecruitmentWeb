@@ -2,14 +2,11 @@ import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import userservice from "@/services/userservice.js";
 import { AxiosError } from "axios";
-import { useToast } from "primevue/usetoast";
 
 export const useUserStore = defineStore("user", () => {
     const isAuthenticated = computed(() => user.value !== null);
 
     const user = ref(null);
-
-    const toast = useToast();
 
     async function getUser(callback = null, isRedirect = false) {
         try {
