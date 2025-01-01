@@ -8,6 +8,20 @@ class AccountService extends BaseService {
         });
         return response.data;
     }
+
+    async getCompanyByRecruiter() {
+        var response = await axios.get(this.baseUrl + "recruiter", {
+            withCredentials: true,
+        });
+        return response.data;
+    }
+
+    async updateCompanyByRecruiter(data) {
+        var response = await axios.put(this.baseUrl + "recruiter", data, {
+            withCredentials: true,
+        });
+        return response.data;
+    }
 }
 
 export default new AccountService("Account");

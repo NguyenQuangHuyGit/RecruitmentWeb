@@ -209,6 +209,7 @@ const selectedRecruitmentTemp = ref();
 const displayRecruit = async (e, data) => {
     try {
         op.value.hide();
+        selectedRecruitmentTemp.value = null;
         if (selectedRecruitmentTemp.value?.id === data.id) {
             selectedRecruitmentTemp.value = null;
         } else {

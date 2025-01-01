@@ -14,7 +14,11 @@
                     <i class="pi pi-sign-out" style="color: #ffffff"></i>
                 </div>
                 <div class="avatar">
-                    <img :src="authContext.user.avatarPath" alt="" v-if="authContext.user.avatarPath" />
+                    <img
+                        :src="authContext.user.avatarPath"
+                        alt=""
+                        v-if="authContext.user && authContext.user.avatarPath"
+                    />
                     <svg
                         v-else
                         width="90"
@@ -39,13 +43,22 @@
                 </div>
                 <div class="user-info">
                     <p style="font-family: Roboto-Bold; font-size: 1.1em">
-                        {{ authContext.user.fullName }}
+                        {{ authContext.user && authContext.user.fullName }}
                     </p>
-                    <p style="font-size: 0.8em">{{ authContext.user.position.toUpperCase() }}</p>
+                    <p style="font-size: 0.8em">
+                        {{
+                            authContext.user &&
+                            authContext.user.position &&
+                            authContext.user.position.toUpperCase()
+                        }}
+                    </p>
                 </div>
             </div>
             <div class="nav-list">
-                <router-link style="text-decoration: none; color: #000" :to="{ name: 'user-profile' }">
+                <router-link
+                    style="text-decoration: none; color: #000"
+                    :to="{ name: 'user-profile' }"
+                >
                     <div class="nav-item">
                         <div>
                             <i class="pi pi-user" style="color: #708090"></i>
@@ -53,7 +66,10 @@
                         <p>Hồ sơ của tôi</p>
                     </div>
                 </router-link>
-                <router-link style="text-decoration: none; color: #000" :to="{ name: 'user-job' }">
+                <router-link
+                    style="text-decoration: none; color: #000"
+                    :to="{ name: 'user-job' }"
+                >
                     <div class="nav-item">
                         <div>
                             <i
@@ -151,6 +167,7 @@ const setLoading = inject("setLoading");
     min-width: 20%;
     height: max-content;
     min-height: 100%;
+    animation: slideInLeft 1s ease forwards;
 }
 
 .recruitment-applied-left .account-info {
@@ -227,7 +244,7 @@ const setLoading = inject("setLoading");
     gap: 16px;
 }
 
-.router-link-active.router-link-exact-active .nav-item p{
+.router-link-active.router-link-exact-active .nav-item p {
     font-family: Roboto-Bold;
 }
 
@@ -241,6 +258,7 @@ const setLoading = inject("setLoading");
     width: 50%;
     border-radius: 8px;
     height: fit-content;
+    animation: slideInDown 1s ease forwards;
 }
 
 .recruitment-applied-right {
@@ -252,6 +270,7 @@ const setLoading = inject("setLoading");
     border-radius: 8px;
     padding: 16px;
     height: max-content;
+    animation: slideInRight 1s ease forwards;
 }
 
 .recruitment-applied-right .recruitment-related-list {
@@ -319,5 +338,38 @@ const setLoading = inject("setLoading");
     display: flex;
     flex-direction: column;
     gap: 6px;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 </style>

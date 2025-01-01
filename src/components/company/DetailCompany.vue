@@ -3,36 +3,31 @@
         <div class="detail-company-header">
             <div class="detail-company-bgi">
                 <img
-                    src="https://images02.vietnamworks.com//companyprofile/masterise-homes/en/cover-vietnamworkai-01.png"
+                    :src="company?.backGroundImagePath"
                     class="cp_herro_banner_image"
-                    alt="Tìm việc làm tại Masterise Homes"
+                    alt="Ảnh đại diện"
                 />
             </div>
             <div class="detail-company-info">
                 <div class="detail-company-logo">
-                    <img
-                        src="https://images02.vietnamworks.com//companyprofile/vietnamworks/en/logo-400x202-01_1_.png"
-                        alt=""
-                    />
+                    <img :src="company?.imagePath" alt="Ảnh đại diện" />
                 </div>
                 <div class="detail-info">
                     <p style="font-family: Roboto-Medium; font-size: 1.5em">
-                        Masterise Homes
+                        {{ company?.name }}
                     </p>
                     <div style="display: flex; gap: 10px; align-items: center">
-                        <p>Hà Nội</p>
-                        |
+                        <p>{{ company?.provinceName }}</p>
+                        <p>|</p>
                         <a
-                            href="https://masterisehomes.com/"
-                            style="
-                                text-decoration: none;
-                                font-size: 0.9em;
-                                color: #000;
-                            "
-                            >https://masterisehomes.com/</a
+                            class="link-website"
+                            :href="company?.linkWebsite"
+                            style="text-decoration: none; font-size: 0.9em"
+                            target="_blank"
+                            >{{ company?.linkWebsite }}</a
                         >
                     </div>
-                    <p>Real Estate/Rental/Leasing</p>
+                    <p>{{ company?.companyField }}</p>
                 </div>
             </div>
         </div>
@@ -43,45 +38,39 @@
                         Giới thiệu về công ty
                     </p>
                     <p style="padding: 0 20px">
-                        Edupia là công ty Công nghệ Giáo dục (Edtech) lớn nhất
-                        Việt Nam, liên tiếp là Top 50 Edtech Nổi bật nhất Đông
-                        Nam Á năm 2022 & 2023. Các sản phẩm Tiếng Anh online cho
-                        trẻ em do Edupia cung cấp như: Edupia Tutor, Babilala,
-                        Ielts, Edupia Class,... không chỉ đa dạng với 10 triệu
-                        người dùng khắp Việt Nam mà còn dẫn đầu thị trường về
-                        chất lượng sản phẩm với hơn 95% học sinh cải thiện điểm
-                        số sau khi học các chương trình do Edupia cung cấp. Con
-                        người là trọng tâm trong chiến lược phát triển, Edupia
-                        quy tụ hơn 700 nhân sự hàng đầu thị trường với đội ngũ
-                        chuyên gia, gen Z, gen Y đầy hoài bão và nhiệt huyết,
-                        cùng nhau hướng tới mục tiêu: "Trở thành Edtech lớn nhất
-                        Đông Nam Á vào năm 2028". Người Edupia mang trong mình 6
-                        giá trị cốt lõi:
+                        {{ company?.aboutCompany }}
                     </p>
                 </div>
                 <div class="recruitment-company">
                     <p class="recruitment-company-header">
                         Công ty đang tuyển dụng
                     </p>
-                    <div class="recruitment-company-list">
+                    <div class="recruitment-company-list" v-if="recruitmentData && recruitmentData.length > 0">
                         <div
                             class="recruitment-company-item"
                             :key="item.id"
-                            v-for="item in recruitmentData"
+                            v-for="(item, index) in recruitmentData"
                             @click="handleChooseItem(item)"
                         >
                             <div
                                 class="recruitment-company-item-save-btn"
                                 v-tooltip.top="'Lưu tin tuyển dụng'"
+                                @click.stop="handleSaveRecruiment(item, index)"
                             >
                                 <i
+                                    v-if="item.isSaveByUser"
+                                    class="pi pi-heart-fill"
+                                    style="color: #31c593; font-size: 1.5rem"
+                                ></i>
+                                <i
+                                    v-else
                                     class="pi pi-heart"
                                     style="color: #31c593; font-size: 1.5rem"
                                 ></i>
                             </div>
                             <div class="recruiment-image">
                                 <img
-                                    src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
+                                    :src="company?.imagePath"
                                     alt="Ảnh công ty"
                                 />
                             </div>
@@ -129,8 +118,7 @@
                 <div class="address-company">
                     <p>Địa chỉ công ty:</p>
                     <p style="color: #555">
-                        Tầng 2,3,5,6 - Tòa Vincem Comatce Tower, số 61 Ngụy Như
-                        Kon Tum, Thanh Xuân, Hà Nội.
+                        {{ company?.address }}
                     </p>
                 </div>
                 <div class="google-map-container">
@@ -146,16 +134,27 @@
 import { ref, inject, onBeforeMount } from "vue";
 const setLoading = inject("setLoading");
 import RecruitmentService from "@/services/recruitmentservice.js";
+import companyservice from "@/services/companyservice";
 import Common from "@/helper/common.js";
 import { useRouter, useRoute } from "vue-router";
+import { useToast } from "primevue/usetoast";
 
 const router = useRouter();
 const recruitmentData = ref([]);
+const toast = useToast();
+
+const company = ref();
+
+const props = defineProps({
+    id: String,
+});
 
 onBeforeMount(async () => {
     setLoading(true);
-    const response = await RecruitmentService.getAll();
-    recruitmentData.value = [...response];
+    var companyRes = await companyservice.getById(props.id);
+    company.value = { ...companyRes };
+    var recruitmentRes = await RecruitmentService.getByCompanyId(props.id);
+    recruitmentData.value = [...recruitmentRes];
     setLoading(false);
 });
 
@@ -182,6 +181,19 @@ const handleProvinceData = (data) => {
 
 const handleChooseItem = (data) => {
     router.push({ name: "recruiter-detail", params: { id: data.id } });
+};
+
+const handleSaveRecruiment = async (data, index) => {
+    await RecruitmentService.saveRecruitment(data.id);
+    recruitmentData.value[index].isSaveByUser = !data.isSaveByUser;
+    if (data.isSaveByUser) {
+        toast.add({
+            severity: "success",
+            summary: "Lưu tin thành công",
+            detail: "Truy cập: Việc làm của bạn >> Công việc của tôi >> Việc đã lưu để xem danh sách",
+            life: 3000,
+        });
+    }
 };
 </script>
 
@@ -262,8 +274,7 @@ const handleChooseItem = (data) => {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    flex: 1;
-    max-width: 67%;
+    width: 67%;
 }
 
 .detail-company-main .detail-main-left .detail-company-about {
@@ -273,6 +284,8 @@ const handleChooseItem = (data) => {
     flex-direction: column;
     gap: 20px;
     padding: 0 0 20px 0;
+    height: 25em;
+    overflow: hidden;
 }
 
 .detail-company-about-header {
@@ -449,5 +462,13 @@ const handleChooseItem = (data) => {
 
 .recruitment-company-item-save-btn:hover {
     background-color: #ebfff8;
+}
+
+.link-website {
+    color: #000;
+}
+
+.link-website:hover {
+    color: #31c593;
 }
 </style>

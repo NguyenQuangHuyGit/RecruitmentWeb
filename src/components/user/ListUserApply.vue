@@ -6,7 +6,7 @@
                 <InputText
                     v-model="filterData.name"
                     placeholder="Tìm kiếm theo tên ứng viên"
-                    @keypress.enter="handleFilterData"
+                    @keydown.enter="handleFilterData"
                 />
             </IconField>
             <Select
@@ -67,6 +67,158 @@
             </DataTable>
         </div>
     </div>
+    <Dialog
+        v-model:visible="userInfoDialog"
+        modal
+        header="Thông tin ứng viên"
+        :style="{ width: '50em', height: '100em' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        maximizable 
+        position="center"
+    >
+        <div class="user-apply-info-container">
+            <div class="row-1">
+                <div class="col-1">
+                    <IftaLabel>
+                        <InputText
+                            name="fullName"
+                            variant="outlined"
+                            readonly
+                            size="small"
+                            v-model="selectedUser.userInfo.fullName"
+                        />
+                        <label for="fullName">Họ tên</label>
+                    </IftaLabel>
+                    <IftaLabel>
+                        <InputText
+                            name="phoneNumber"
+                            variant="outlined"
+                            readonly
+                            size="small"
+                            v-model="selectedUser.userInfo.phoneNumber"
+                        />
+                        <label for="phoneNumber">Số điện thoại</label>
+                    </IftaLabel>
+                    <IftaLabel>
+                        <InputText
+                            name="email"
+                            variant="outlined"
+                            size="small"
+                            v-model="selectedUser.userInfo.email"
+                            readonly
+                        />
+                        <label for="email">Email</label>
+                    </IftaLabel>
+                    <IftaLabel>
+                        <InputText
+                            name="dateOfBirth"
+                            variant="outlined"
+                            v-model="dob"
+                            size="small"
+                            readonly
+                        />
+                        <label for="dateOfBirth">Ngày sinh</label>
+                    </IftaLabel>
+                    <IftaLabel>
+                        <InputText
+                            name="address"
+                            variant="outlined"
+                            v-model="selectedUser.userInfo.address"
+                            size="small"
+                            readonly
+                        />
+                        <label for="address">Địa chỉ</label>
+                    </IftaLabel>
+                </div>
+                <div class="col-2">
+                    <Skeleton
+                        height="20rem"
+                        width="210px"
+                        :class="[isLoadingCv ? '' : 'notLoading']"
+                    ></Skeleton>
+                    <div
+                        :class="[!isLoadingCv ? '' : 'notLoading']"
+                        v-tooltip.top="'Nhấn để xem CV'"
+                        style="
+                            cursor: pointer;
+                            height: 19.5rem;
+                            overflow: hidden;
+                            border-radius: 8px;
+                            padding: 10px;
+                            box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px
+                                0px;
+                            width: 100%;
+                        "
+                        @click="handleOpenCV"
+                    >
+                        <VuePdfEmbed
+                            @rendered="isLoadingCv = false"
+                            v-if="selectedUser.cvApplyLink"
+                            annotation-layer
+                            :source="selectedUser.cvApplyLink"
+                            :page="1"
+                            :width="210"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="row-2">
+                <IftaLabel>
+                    <InputText
+                        name="gender"
+                        variant="outlined"
+                        readonly
+                        size="small"
+                        v-model="selectedUser.userInfo.gender"
+                    />
+                    <label for="gender">Giới tính</label>
+                </IftaLabel>
+                <IftaLabel>
+                    <InputText
+                        name="degree"
+                        variant="outlined"
+                        readonly
+                        size="small"
+                        v-model="selectedUser.userInfo.degree"
+                    />
+                    <label for="degree">Bằng cấp cao nhất</label>
+                </IftaLabel>
+                <IftaLabel>
+                    <InputText
+                        name="fieldName"
+                        variant="outlined"
+                        readonly
+                        size="small"
+                        v-model="selectedUser.userInfo.fieldName"
+                    />
+                    <label for="fieldName">Lĩnh vực làm việc</label>
+                </IftaLabel>
+                <IftaLabel>
+                    <InputText
+                        name="level"
+                        variant="outlined"
+                        readonly
+                        size="small"
+                        v-model="selectedUser.userInfo.level"
+                    />
+                    <label for="level">Cấp bậc hiện tại</label>
+                </IftaLabel>
+                <IftaLabel style="grid-column: 1/3;">
+                    <Textarea 
+                        style="resize: none;"
+                        name="introduce"
+                        variant="outlined"
+                        readonly
+                        size="small"
+                        fluid
+                        rows="3"
+                        v-model="selectedUser.introduce"
+                    />
+                    <label for="introduce">Lời giới thiệu của ứng viên</label>
+                </IftaLabel>
+            </div>
+        </div>
+    </Dialog>
 </template>
 
 <script setup>
@@ -74,6 +226,7 @@ import { onBeforeMount, ref, inject, computed } from "vue";
 import UserService from "@/services/userservice.js";
 import Common from "@/helper/common";
 import recruitmentservice from "@/services/recruitmentservice";
+import VuePdfEmbed from "vue-pdf-embed";
 import { useToast } from "primevue/usetoast";
 
 const toast = useToast();
@@ -83,7 +236,16 @@ const props = defineProps({
     id: String,
 });
 
+const userInfoDialog = ref(false);
+const selectedUser = ref();
+const isLoadingCv = ref(false);
+const isUpdateStatus = ref(true);
+
 const userRecruiments = ref([]);
+
+const dob = computed(
+    () => Common.formatDate(selectedUser.value.userInfo.dateOfBirth).result
+);
 
 const filterData = ref({
     name: "",
@@ -101,6 +263,7 @@ const state = [
     {
         id: 1,
         name: "Đã xem",
+        disabled: true,
     },
     {
         id: 2,
@@ -180,7 +343,9 @@ const handleStatusData = (status) => {
 };
 
 const handleOpenUserInfo = async (data) => {
-    const response = await UserService.getUserById(data.userId);
+    isLoadingCv.value = true;
+    selectedUser.value = data;
+    userInfoDialog.value = true;
     if (data.status === 0) {
         await recruitmentservice.updateStatusUserRecruitment(data.id, 1);
         data.status = 1;
@@ -189,17 +354,29 @@ const handleOpenUserInfo = async (data) => {
             name: handleStatusData(1),
         };
     }
-    console.log(response);
+};
+
+const handleOpenCV = () => {
+    window.open(selectedUser.value.cvApplyLink, "_blank");
 };
 
 const handleUpdateStatus = async (data) => {
+    if (data.status == selectedStatelist.value[data.id].id){
+        isUpdateStatus.value = false;
+        return;
+    }else {
+        isUpdateStatus.value = true;
+    }
     data.status = selectedStatelist.value[data.id].id;
     const temp = userRecruiments.value.find((r) => r.id == data.id);
     temp.status = selectedStatelist.value[data.id].id;
 };
 
-const onCellEditComplete = async (event) => {
-    if (event.newValue === 0) return;
+const onCellEditComplete = async (event) => {        
+    if (event.newValue === 0 || !isUpdateStatus.value){
+        isUpdateStatus.value = true;
+        return;
+    };
     setLoading(true);
     await recruitmentservice.updateStatusUserRecruitment(
         event.data.id,
@@ -230,5 +407,39 @@ const onCellEditComplete = async (event) => {
 
 .list-user-toolbar .search-input {
     width: 300px;
+}
+
+.user-apply-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.user-apply-info-container .row-1 {
+    display: flex;
+    gap: 16px;
+}
+
+.user-apply-info-container .row-1 .col-1 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 60%;
+    flex: 1;
+}
+
+.user-apply-info-container .row-1 .col-2 {
+    max-width: 40%;
+    width: max-content;
+}
+
+.user-apply-info-container .row-1 .col-2 .notLoading {
+    display: none;
+}
+
+.user-apply-info-container .row-2 {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 16px;
 }
 </style>

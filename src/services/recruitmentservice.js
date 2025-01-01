@@ -7,8 +7,13 @@ class RecruitmentService extends BaseService {
         return response.data;
     }
 
+    async getByCompanyId(id) {
+        var response = await axios.get(this.baseUrl + `get-by-company?CompanyId=${id}`, { withCredentials: true });
+        return response.data;
+    }
+
     async getAllWithFilter(data) {
-        const query = `?Name=${data.name}&FieldId=${data.fieldId !== null ? data.fieldId : ''}&ProvinceId=${data.provinceId !== null ? data.provinceId : ''}&Experience=${data.experience !== null ? data.experience : ''}&StartSalary=${data.startSalary ? data.startSalary : ''}&EndSalary=${data.endSalary ? data.endSalary : ''}&Money=${data.money !== null ? data.money : ''}&IsAgree=${data.isAgree}&Level=${data.level !== null ? data.level : ''}&TypeWorking=${data.typeWorking !== null ? data.typeWorking : ''}`;
+        const query = `?Name=${data.name}&FieldId=${data.fieldId !== null ? data.fieldId : ''}&ProvinceId=${data.provinceId !== null ? data.provinceId : ''}&Experience=${data.experience !== null ? data.experience : ''}&StartSalary=${data.startSalary ? data.startSalary : ''}&EndSalary=${data.endSalary ? data.endSalary : ''}&Money=${data.money !== null ? data.money : ''}&IsAgree=${data.isAgree ? data.isAgree : ''}&Level=${data.level !== null ? data.level : ''}&TypeWorking=${data.typeWorking !== null ? data.typeWorking : ''}`;
         var response = await axios.get(this.baseUrl + query, { withCredentials: true });
         return response.data;
     }

@@ -14,6 +14,7 @@ import RecruimentUser from "@/components/user/RecruimentUser.vue";
 import UserProfile from "@/components/user/UserProfile.vue";
 import ListComapny from "@/components/company/ListComapny.vue";
 import DetailCompany from "@/components/company/DetailCompany.vue";
+import CompanyMain from "@/components/company/CompanyMain.vue";
 import { useUserStore } from "@/stores/counter";
 
 const router = createRouter({
@@ -123,18 +124,25 @@ const router = createRouter({
             },
             children: [
                 {
-                    path: "",
+                    path: "/recruiter",
                     name: "recruiter-mannage",
                     components: {
                         recruiterview: RecuitMain,
                     },
                 },
                 {
-                    path: "/recruitment/:id/user-list",
+                    path: "/recruiter/recruitment/:id/user-list",
                     name: "user-list",
                     props: (to) => ({ id: to.params.id }),
                     components: {
                         recruiterview: ListUserApply,
+                    },
+                },
+                {
+                    path: "/recruiter/company",
+                    name: "company-manage",
+                    components: {
+                        recruiterview: CompanyMain,
                     },
                 },
             ],

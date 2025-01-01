@@ -157,7 +157,7 @@
             <div class="recruitment-list-container">
                 <div
                     :key="item.id"
-                    class="recruitment-item"
+                    class="recruitment-item hvr-shadow"
                     v-for="(item, index) in recruitmentData"
                     @click="handleChooseItem(item)"
                 >
@@ -179,7 +179,7 @@
                     </div>
                     <div class="recruiment-image">
                         <img
-                            src="https://images.vietnamworks.com/pictureofcompany/25/10816736.png"
+                            :src="item.company.imagePath"
                             alt="Ảnh công ty"
                         />
                     </div>
@@ -548,7 +548,7 @@ const handleChooseItem = (data) => {
 }
 
 .search-recruit-container .recruitment-list-container .recruitment-item:hover {
-    background-color: #fafffd;
+    /* background-color: #fafffd; */
 }
 
 .search-recruit-container

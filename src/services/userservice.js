@@ -3,7 +3,7 @@ import axios from 'axios';
 
 class UserService extends BaseService {
     async getByRecruitmentId(id, data) {
-        var response = await axios.get(this.baseUrl + `recruiter?RecruitmentId=${id}&Name=${data.name}&Status=${data.status ? data.status : ''}`, { withCredentials: true });
+        var response = await axios.get(this.baseUrl + `recruiter?RecruitmentId=${id}&UserName=${data.name}&Status=${data.status != null ? data.status : ''}`, { withCredentials: true });
         return response.data;
     }
 

@@ -16,6 +16,11 @@ class AuthService extends BaseService {
         var response = await axios.post(this.baseUrl + 'recruiter/sign-up', data, { withCredentials: true });
         return response.data;
     }
+
+    async signOut() {
+        var response = await axios.get(this.baseUrl + 'sign-out', { withCredentials: true });
+        return response.data;
+    }
 }
 
 export default new AuthService('Auth');

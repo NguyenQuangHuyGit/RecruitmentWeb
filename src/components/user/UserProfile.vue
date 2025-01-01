@@ -18,10 +18,10 @@
             </div>
             <div class="content">
                 <div style="font-family: Roboto-Medium; font-size: 1.5em">
-                    {{ user.fullName }}
+                    {{ user.fullName ?? "" }}
                 </div>
                 <div style="font-size: 0.9em">
-                    {{ user.position.toUpperCase() }}
+                    {{ user.position ? user.position.toUpperCase() : "" }}
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center">
                     <svg
@@ -200,6 +200,29 @@
                     <label for="phone">Số điện thoại</label>
                 </FloatLabel>
                 <FloatLabel variant="on">
+                    <Select
+                        v-model="selectedDegree"
+                        :options="degrees"
+                        optionLabel="name"
+                        fluid
+                    />
+                    <label for="phone">Bằng cấp cao nhất</label>
+                </FloatLabel>
+                <FloatLabel variant="on">
+                    <Select
+                        v-model="selectedField"
+                        :options="fields"
+                        optionLabel="name"
+                        filter
+                        fluid
+                    >
+                        <template #emptyfilter>
+                            Không có kết quả phù hợp
+                        </template>
+                    </Select>
+                    <label for="phone">Lĩnh vực hiện tại</label>
+                </FloatLabel>
+                <FloatLabel variant="on">
                     <DatePicker
                         v-model="userForm.dateOfBirth"
                         showIcon
@@ -268,7 +291,17 @@
         </div>
 
         <template #footer>
-            <Button type="button" label="CV đính kèm" badge="2" />
+            <Button
+                type="button"
+                label="CV đính kèm"
+                :badge="cvPaths.length ?? 0"
+                @click="
+                    () => {
+                        visibleCvForm = true;
+                        isLoadingCv = true;
+                    }
+                "
+            />
             <Button
                 label="Lưu"
                 outlined
@@ -348,6 +381,109 @@
             />
         </template>
     </Dialog>
+    <Dialog
+        v-model:visible="visibleCvForm"
+        modal
+        header="Danh sách CV của bạn"
+        :style="{ width: '50em' }"
+    >
+        <div class="cv-container">
+            <div v-if="!cvPaths || cvPaths.length === 0" style="grid-column: 1/4; margin-bottom: 15px;">
+                <p
+                    style="
+                        font-family: Roboto-Medium;
+                        text-align: center;
+                        font-size: 1.5em;
+                        width: 100%;
+                    "
+                >
+                    Bạn chưa tải lên CV nào
+                </p>
+            </div>
+            <Skeleton
+                height="20rem"
+                :class="[`item${index + 1}`, isLoadingCv ? '' : 'notLoading']"
+                v-for="cv in cvPaths"
+                :key="cv.id"
+            ></Skeleton>
+            <div
+                class="cv-item"
+                v-for="(cv, index) in cvPaths"
+                :key="cv.id"
+                :class="[`item${index + 1}`, !isLoadingCv ? '' : 'notLoading']"
+            >
+                <div
+                    style="
+                        height: 19.5rem;
+                        overflow: hidden;
+                        border-radius: 8px;
+                        padding: 10px;
+                        box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+                        width: 100%;
+                    "
+                    @click="handleOpenCV(cv.path)"
+                >
+                    <VuePdfEmbed
+                        @rendered="isLoadingCv = false"
+                        v-if="cv.path"
+                        annotation-layer
+                        :source="cv.path"
+                        :page="1"
+                        :width="210"
+                    />
+                </div>
+                <Button
+                    icon="pi pi-times"
+                    severity="danger"
+                    variant="text"
+                    rounded
+                    size="small"
+                    style="position: absolute; right: 5px; top: 5px; z-index: 2"
+                    v-tooltip.top="'Xóa CV này'"
+                    class="action-btn"
+                    @click="handleDeleteCv(cv.id)"
+                />
+                <div class="cv-name" @click.stop="handleOpenCV(cv.path)">
+                    <div
+                        style="
+                            font-family: Roboto-Medium;
+                            width: 100%;
+                            word-wrap: break-word;
+                        "
+                    >
+                        {{ cv.name }}
+                    </div>
+                </div>
+            </div>
+            <div
+                style="
+                    width: 100%;
+                    grid-area: action;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                "
+            >
+                <FileUpload
+                    mode="basic"
+                    @select="onCvFileSelect"
+                    customUpload
+                    auto
+                    accept=".pdf"
+                    severity="secondary"
+                    class="p-button-outlined"
+                    chooseLabel="Tải lên CV mới"
+                />
+                <Message
+                    severity="info"
+                    size="small"
+                    v-if="isShowMessage"
+                    :life="3000"
+                    >Bạn chỉ được tải lên hệ thống tối đa 3 CV</Message
+                >
+            </div>
+        </div>
+    </Dialog>
 </template>
 
 <script setup>
@@ -355,14 +491,21 @@ import { useTemplateRef, ref, computed, onBeforeMount, inject } from "vue";
 import { useUserStore } from "@/stores/counter";
 import accountservice from "@/services/accountservice";
 import fileservice from "@/services/fileservice";
+import fieldservice from "@/services/fieldservice";
 import { useToast } from "primevue/usetoast";
 import Common from "@/helper/common.js";
 import { useRouter, useRoute } from "vue-router";
+import VuePdfEmbed from "vue-pdf-embed";
 
 const router = useRouter();
 const toast = useToast();
 const setLoading = inject("setLoading");
 const authContext = useUserStore();
+
+const cvPaths = ref([...authContext.user.cvPaths]);
+const visibleCvForm = ref(false);
+const isShowMessage = ref(false);
+const isLoadingCv = ref(false);
 
 const user = ref({
     ...authContext.user,
@@ -370,9 +513,53 @@ const user = ref({
 
 const userForm = ref({ ...authContext.user });
 
-const srcAvatar = ref(authContext.user.avatarPath ?? null);
+const srcAvatar = ref(authContext.user?.avatarPath ?? null);
+
+const initValueForm = () => {
+    userForm.value = { ...user.value };
+    selectedDegree.value = degrees.find((d) => d.name === user.value.degree);
+    selectedField.value = fields.value.find(
+        (f) => f.id === userForm.value.fieldId
+    );
+};
+
+async function onCvFileSelect(event) {
+    if (cvPaths.value.length >= 3) {
+        isShowMessage.value = true;
+        return;
+    }
+    toast.add({
+        severity: "info",
+        summary: "Thông báo",
+        detail: "File của bạn đang được tải lên",
+        life: 3000,
+    });
+    const file = event.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append("file", file);
+        const newCV = await fileservice.upload(2, formData);
+        cvPaths.value.push(newCV);
+    }
+}
+
+const handleOpenCV = (path) => {
+    window.open(path, "_blank");
+};
+
+const handleDeleteCv = async (id) => {
+    setLoading(true);
+    await fileservice.delete(id);
+    authContext.getUser(null, true);
+    cvPaths.value = cvPaths.value.filter((cv) => cv.id !== id);
+    setLoading(false);
+};
 
 async function onFileSelect(event) {
+    setLoading(true);
     const file = event.files[0];
 
     if (file) {
@@ -388,11 +575,21 @@ async function onFileSelect(event) {
         formData.append("file", file);
         await fileservice.upload(0, formData);
         authContext.getUser(null, true);
+        setLoading(false);
     }
 }
 
-onBeforeMount(() => {
-    console.log(authContext.user);
+onBeforeMount(async () => {
+    setLoading(true);
+    var response = await fieldservice.getAll();
+    fields.value = [...response];
+    selectedDegree.value = degrees.find(
+        (d) => d.name === userForm.value.degree
+    );
+    selectedField.value = fields.value.find(
+        (f) => f.id === userForm.value.fieldId
+    );
+    setLoading(false);
 });
 
 const menuConfigAccount = useTemplateRef("menuConfigAccount");
@@ -405,7 +602,46 @@ const items = ref([
     },
 ]);
 
+const fields = ref([]);
+const selectedField = ref();
+
+const degrees = [
+    {
+        name: "Trung học",
+        id: 0,
+    },
+    {
+        name: "Trung cấp",
+        id: 1,
+    },
+    {
+        name: "Cao đẳng",
+        id: 2,
+    },
+    {
+        name: "Cử nhân",
+        id: 3,
+    },
+    {
+        name: "Thạc sĩ",
+        id: 4,
+    },
+    {
+        name: "Tiến sĩ",
+        id: 5,
+    },
+];
+const selectedDegree = ref();
+
 const levelType = [
+    {
+        name: "Thực tập sinh/Sinh viên",
+        id: 4,
+    },
+    {
+        name: "Mới tốt nghiệp",
+        id: 5,
+    },
     {
         name: "Nhân viên",
         id: 0,
@@ -446,7 +682,7 @@ const handleOpenEditInfoForm = () => {
 
 const handleCloseInforForm = (value) => {
     if (!value) {
-        userForm.value = { ...user.value };
+        initValueForm();
     }
 };
 
@@ -456,6 +692,8 @@ const handleEditProfile = async () => {
         userForm.value.dateOfBirth
     );
     userForm.value.level = selectedlevelType.value.id;
+    userForm.value.fieldId = selectedField.value?.id;
+    userForm.value.degree = selectedDegree.value?.name;
     await accountservice.update(userForm.value);
     mainInforVisible.value = false;
     user.value = { ...userForm.value };
@@ -526,7 +764,6 @@ const handleOpenMap = () => {
     object-position: center center;
     border-radius: 50%;
 }
-
 
 .user-profile-container .user-main-infor .content {
     display: flex;
@@ -685,7 +922,7 @@ const handleOpenMap = () => {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 16px;  
+    gap: 16px;
     height: max-content;
 }
 
@@ -736,7 +973,7 @@ const handleOpenMap = () => {
 
 .main-info-form-container .second-container {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 55% auto;
     column-gap: 16px;
     row-gap: 16px;
 }
@@ -758,6 +995,71 @@ const handleOpenMap = () => {
 .suitable-recruit-form-container .suitable-salary {
     display: flex;
     gap: 8px;
+}
+
+.cv-container {
+    padding: 10px;
+    display: grid;
+    grid-template-areas:
+        "item1 item2 item3"
+        "action action action";
+    grid-template-rows: max-content auto;
+    grid-template-columns: 1fr 1fr 1fr;
+    column-gap: 16px;
+    row-gap: 10px;
+    width: 100%;
+}
+
+.cv-container .cv-item {
+    position: relative;
+    height: max-content;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cv-container .cv-item .cv-name {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 100%;
+    background-color: hsla(0, 0%, 95%, 0.8);
+    padding: 10px;
+    animation: fadeIn 0.2s ease-in-out forwards;
+}
+
+/* .cv-container .cv-item:hover {
+    opacity: 0.7;
+} */
+
+.cv-container .cv-item .action-btn {
+    display: none;
+    animation: fadeIn 0.2s ease-in-out forwards;
+}
+
+.cv-container .cv-item:hover .action-btn {
+    display: inline-flex;
+}
+
+.cv-container .cv-item:hover .cv-name {
+    display: block;
+}
+
+.cv-container .cv-item.item1 {
+    grid-area: item1;
+}
+
+.cv-container .cv-item.item2 {
+    grid-area: item2;
+}
+
+.cv-container .cv-item.item3 {
+    grid-area: item3;
+}
+
+.notLoading {
+    display: none;
 }
 
 @keyframes fadeIn {

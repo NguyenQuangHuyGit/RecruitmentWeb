@@ -1,6 +1,7 @@
 import "./assets/css/main.css";
 import "primeicons/primeicons.css";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import 'hover.css' 
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
@@ -14,6 +15,9 @@ import Tooltip from "primevue/tooltip";
 import Common from "./helper/common.js";
 import App from "./App.vue";
 import router from "./router";
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url'
+import { GlobalWorkerOptions } from 'vue-pdf-embed/dist/index.essential.mjs'
+GlobalWorkerOptions.workerSrc = PdfWorker;
 
 const app = createApp(App);
 

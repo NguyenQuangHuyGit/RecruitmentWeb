@@ -8,6 +8,7 @@
                     v-model="filterValue"
                     placeholder="Nhập tên công ty"
                     size="large"
+                    @keypress.enter="handleReloadData"
                 />
                 <InputIcon class="pi pi-spin pi-spinner" />
             </IconField>
@@ -22,25 +23,21 @@
                 "
             >
                 <p>Số công ty đang tuyển dụng trên hệ thống</p>
-                <Badge
-                    value="1000000"
-                    size="xlarge"
-                ></Badge>
+                <Badge :value="companies.length" size="xlarge"></Badge>
             </div>
             <div class="list-company">
-                <div class="item-company">
+                <div
+                    class="item-company"
+                    v-for="item in companies"
+                    :key="item.id"
+                >
                     <div
                         class="company-bgi"
-                        @click="
-                            $router.push({
-                                name: 'detail-company',
-                                params: { id: 1 },
-                            })
-                        "
+                        @click="handleClickDetailCompany(item.id)"
                     >
                         <img
-                            src="https://images02.vietnamworks.com/companyprofile/masterise-homes/en/cover-vietnamworkai-01.png"
-                            alt="Masterise Homes"
+                            :src="item.backGroundImagePath"
+                            alt="Ảnh nền"
                             placeholder="blur"
                             loading="lazy"
                         />
@@ -48,110 +45,35 @@
                     <div class="company-main-info">
                         <div
                             class="company-logo"
-                            @click="
-                                $router.push({
-                                    name: 'detail-company',
-                                    params: { id: 1 },
-                                })
-                            "
+                            @click="handleClickDetailCompany(item.id)"
                         >
                             <img
-                                src="https://images.vietnamworks.com/pictureofcompany/ec/10888325.png"
-                                alt="Masterise Homes"
+                                :src="item.imagePath"
+                                alt="Ảnh đại diện"
                                 placeholder="blur"
                                 loading="lazy"
                             />
                         </div>
                         <div class="company-info">
                             <p
-                                @click="
-                                    $router.push({
-                                        name: 'detail-company',
-                                        params: { id: 1 },
-                                    })
+                                style="
+                                    text-wrap: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
                                 "
+                                @click="handleClickDetailCompany(item.id)"
                             >
-                                Masterise Homes
+                                {{ item.name }}
                             </p>
                         </div>
                     </div>
                     <div class="about-company">
                         <p>
-                            " Prep là một startup Edtech (công nghệ giáo dục)
-                            hiện đang phát triển nền tảng học tập tương tác trực
-                            tuyến để học viên luyện thi chứng chỉ ngoại ngữ hiệu
-                            quả trong khi tiết kiệm tối ưu về thời gian và chi
-                            phí. Học viên được xây dựng lộ trình cá nhân hoá sao
-                            cho phù hợp với khả năng và mục tiêu của mình nhất.
-                            Prep với sứ..."
-                        </p>
-                    </div>
-                </div>
-                <div class="item-company">
-                    <div class="company-bgi">
-                        <img
-                            src="https://images02.vietnamworks.com/companyprofile/masterise-homes/en/cover-vietnamworkai-01.png"
-                            alt="Masterise Homes"
-                            placeholder="blur"
-                            loading="lazy"
-                        />
-                    </div>
-                    <div class="company-main-info">
-                        <div class="company-logo">
-                            <img
-                                src="https://images.vietnamworks.com/pictureofcompany/ec/10888325.png"
-                                alt="Masterise Homes"
-                                placeholder="blur"
-                                loading="lazy"
-                            />
-                        </div>
-                        <div class="company-info">
-                            <p>Masterise Homes</p>
-                        </div>
-                    </div>
-                    <div class="about-company">
-                        <p>
-                            " Prep là một startup Edtech (công nghệ giáo dục)
-                            hiện đang phát triển nền tảng học tập tương tác trực
-                            tuyến để học viên luyện thi chứng chỉ ngoại ngữ hiệu
-                            quả trong khi tiết kiệm tối ưu về thời gian và chi
-                            phí. Học viên được xây dựng lộ trình cá nhân hoá sao
-                            cho phù hợp với khả năng và mục tiêu của mình nhất.
-                            Prep với sứ..."
-                        </p>
-                    </div>
-                </div>
-                <div class="item-company">
-                    <div class="company-bgi">
-                        <img
-                            src="https://images02.vietnamworks.com/companyprofile/masterise-homes/en/cover-vietnamworkai-01.png"
-                            alt="Masterise Homes"
-                            placeholder="blur"
-                            loading="lazy"
-                        />
-                    </div>
-                    <div class="company-main-info">
-                        <div class="company-logo">
-                            <img
-                                src="https://images.vietnamworks.com/pictureofcompany/ec/10888325.png"
-                                alt="Masterise Homes"
-                                placeholder="blur"
-                                loading="lazy"
-                            />
-                        </div>
-                        <div class="company-info">
-                            <p>Masterise Homes</p>
-                        </div>
-                    </div>
-                    <div class="about-company">
-                        <p>
-                            " Prep là một startup Edtech (công nghệ giáo dục)
-                            hiện đang phát triển nền tảng học tập tương tác trực
-                            tuyến để học viên luyện thi chứng chỉ ngoại ngữ hiệu
-                            quả trong khi tiết kiệm tối ưu về thời gian và chi
-                            phí. Học viên được xây dựng lộ trình cá nhân hoá sao
-                            cho phù hợp với khả năng và mục tiêu của mình nhất.
-                            Prep với sứ..."
+                            {{
+                                item.aboutCompany
+                                    ? `"${item.aboutCompany}"`
+                                    : ""
+                            }}
                         </p>
                     </div>
                 </div>
@@ -161,10 +83,36 @@
 </template>
 
 <script setup>
-import { ref, inject } from "vue";
-const setLoading = inject("setLoading");
+import { ref, inject, onBeforeMount } from "vue";
+import companyservice from "@/services/companyservice";
+import { useRouter, useRoute } from "vue-router";
+import { useToast } from "primevue/usetoast";
 
+const setLoading = inject("setLoading");
+const toast = useToast();
+const router = useRouter();
 const filterValue = ref("");
+
+const companies = ref([]);
+
+onBeforeMount(async () => {
+    setLoading(true);
+    var response = await companyservice.getAll(filterValue.value);
+    companies.value = [...response];
+    console.log(companies.value);
+    setLoading(false);
+});
+
+const handleReloadData = async () => {
+    setLoading(true);
+    var response = await companyservice.getAll(filterValue.value);
+    companies.value = [...response];
+    setLoading(false);
+};
+
+const handleClickDetailCompany = (id) => {
+    router.push({ name: "detail-company", params: { id: id } });
+};
 </script>
 
 <style>
@@ -208,8 +156,9 @@ const filterValue = ref("");
 .list-company {
     display: grid;
     width: 100%;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: 32% 32% 32%;
     column-gap: 10px;
+    justify-content: space-around;
 }
 
 .list-company .item-company {
@@ -219,6 +168,12 @@ const filterValue = ref("");
     flex-direction: column;
     gap: 10px;
     padding: 10px;
+    height: 24rem;
+    overflow: hidden;
+}
+
+.item-company:hover {
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }
 
 .item-company .company-bgi {
@@ -286,8 +241,17 @@ const filterValue = ref("");
     cursor: pointer;
 }
 
+.item-company .about-company {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .item-company .about-company p {
     color: #555;
     font-size: 0.85em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    height: 100%;
+    -webkit-box-orient: vertical;
 }
 </style>

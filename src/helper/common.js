@@ -3,7 +3,7 @@ const Common = {
         if (!date) {
             return { result: "", resultForForm: null };
         }
-        let newDate = new Date(date);
+        let newDate = new Date(date + 'Z');
         let day = newDate.getDate();
         let month = newDate.getMonth() + 1;
         let year = newDate.getFullYear();
@@ -17,6 +17,17 @@ const Common = {
         let result = `${day}/${month}/${year}`;
         let resultForForm = `${year}-${month}-${day}`;
         return { result, resultForForm };
+    },
+
+    formatTime(date) {
+        if (!date) {
+            return "00:00:00";
+        }
+        var dateTemp = new Date(date + 'Z');
+        const hours = dateTemp.getHours().toString().padStart(2, '0');
+        const minutes = dateTemp.getMinutes().toString().padStart(2, '0');
+        const seconds = dateTemp.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
     },
 
     convertToUTC(localDate) {

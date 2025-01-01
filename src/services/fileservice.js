@@ -11,6 +11,13 @@ class FileService extends BaseService {
         });
         return response.data;
     }
+
+    async delete(id) {
+        var response = await axios.delete(this.baseUrl + `${id}`, {
+            withCredentials: true
+        });
+        return response.data;
+    }
 }
 
 export default new FileService("File");

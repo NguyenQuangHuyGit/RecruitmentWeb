@@ -17,8 +17,8 @@
                         rounded
                     ></Tag>
                     <Tag
-                        v-if="data.provinceName"
-                        :value="`Địa điểm: ${data.provinceName ?? ''}`"
+                        v-if="data.provinceName || data.company?.provinceName"
+                        :value="`Địa điểm: ${handleProvinceData()}`"
                         severity="secondary"
                         rounded
                     ></Tag>
@@ -30,22 +30,32 @@
                 </div>
                 <div class="recruitment-control">
                     <Button
+                        v-if="checkExpiredRecruitment()"
                         label="Nộp đơn ứng tuyển"
                         icon="pi pi-send"
-                        style="flex: 1"
-                        @click="handleApplyRecruit"
+                        style="width: 85%"
+                        @click="handleBeforeAppy"
+                    />
+                    <Button
+                        v-else
+                        label="Hết hạn ứng tuyển"
+                        icon="pi pi-ban"
+                        style="width: 85%"
+                        disabled
                     />
                     <Button
                         v-if="!data.isSaveByUser"
                         label="Lưu tin"
                         icon="pi pi-heart"
-                        style="min-width: 150px"
+                        style="width: 20%"
+                        @click="handleSaveRecruitment"
                     />
                     <Button
                         v-else
                         label="Bỏ lưu tin"
                         outlined
-                        style="min-width: 150px"
+                        style="width: 20%"
+                        @click="handleSaveRecruitment"
                     />
                 </div>
             </div>
@@ -55,13 +65,15 @@
             <div class="row company-info">
                 <div class="bg-image">
                     <img
-                        src="https://www.vietnamworks.com/_next/image?url=https%3A%2F%2Fimages.vietnamworks.com%2Fpictureofcompany%2F05%2Fcompany-info-cover-picture-url-273080-1719481735.png&w=1920&q=75"
-                        alt=""
+                        :src="
+                            data.company ? data.company.backGroundImagePath : ''
+                        "
+                        alt="Ảnh nền"
                     />
                     <div class="company-image">
                         <img
-                            src="https://www.vietnamworks.com/_next/image?url=https%3A%2F%2Fimages.vietnamworks.com%2Fpictureofcompany%2F25%2F10816736.png&w=128&q=75"
-                            alt="Image"
+                            :src="data.company ? data.company.imagePath : ''"
+                            alt="Ảnh đại diện"
                         />
                     </div>
                 </div>
@@ -73,7 +85,9 @@
                             text-align: center;
                         "
                     >
-                        VINFAST TRADING AND PRODUCTION JSC
+                        {{
+                            data.company ? data.company.name.toUpperCase() : ""
+                        }}
                     </div>
                     <div style="display: flex; gap: 16px">
                         <p
@@ -196,7 +210,7 @@
                     >
                         <p style="color: #4d5965">Kinh nghiệm</p>
                         <p style="font-family: Roboto-Medium; font-size: 0.9em">
-                            {{ data.experience }} năm
+                            {{ handleExperienceData() }}
                         </p>
                     </div>
                 </div>
@@ -277,6 +291,59 @@
             </div>
         </div>
     </div>
+    <Dialog
+        v-model:visible="isShowApplyConfirm"
+        modal
+        header="Hoàn thiện hồ sơ của bạn"
+        :style="{ width: '30em' }"
+    >
+        <div style="display: flex; flex-direction: column; gap: 20px">
+            <p style="font-family: Roboto-Medium; font-size: 1.1em">
+                Chọn 1 CV để ứng tuyển:
+            </p>
+            <div class="cv-list-container" v-if="cvPaths && cvPaths.length > 0">
+                <div
+                    class="cv-list-item"
+                    v-for="(item, index) in cvPaths"
+                    :key="index"
+                >
+                    <RadioButton
+                        v-model="selectedCv"
+                        name="cv"
+                        :value="item.path"
+                    />
+                    <label
+                        v-tooltip.right="{
+                            value: 'Nhấn để cem CV',
+                            showDelay: 1000,
+                        }"
+                        ><a
+                            :href="item.path"
+                            style="text-decoration: none; color: #000"
+                            target="_blank"
+                            >{{ item.name }}</a
+                        ></label
+                    >
+                </div>
+            </div>
+            <FloatLabel variant="in">
+                <Textarea
+                    v-model="introduce"
+                    rows="5"
+                    cols="30"
+                    fluid
+                    style="resize: none"
+                />
+                <label>Lời giới thiệu ngắn gọn với nhà tuyển dụng</label>
+            </FloatLabel>
+            <Message v-if="messageError" severity="warn" :life="3000"
+                >Bạn phải chọn 1 CV để ứng tuyển</Message
+            >
+            <div style="display: flex; flex-direction: row-reverse">
+                <Button label="Ứng tuyển" @click="handleApplyRecruit" />
+            </div>
+        </div>
+    </Dialog>
 </template>
 
 <script setup>
@@ -289,14 +356,20 @@ import {
 } from "vue";
 import RecruitmentService from "@/services/recruitmentservice.js";
 import Common from "@/helper/common.js";
+import { useUserStore } from "@/stores/counter";
 import { useToast } from "primevue/usetoast";
 import { GoogleMap, Marker } from "vue3-google-map";
+import { AxiosError } from "axios";
 
 const apiKey = "AIzaSyANyLPiyzlvtu0Isph5IYSv6AIWWclVKkU";
 const center = { lat: 21.0029075, lng: 105.863402 };
-
+const authContext = useUserStore();
+const cvPaths = ref([]);
+const selectedCv = ref("");
+const introduce = ref("");
+const messageError = ref(false);
 const setLoading = inject("setLoading");
-
+const isShowApplyConfirm = ref(false);
 const toast = useToast();
 const props = defineProps({
     id: String,
@@ -316,6 +389,7 @@ onBeforeMount(async () => {
 
 onBeforeUpdate(() => {
     if (data.value.content && detail.value) {
+        detail.value.innerHTML = "";
         const element = document.createElement("div");
         element.classList.add("content-container");
         element.innerHTML = `
@@ -328,17 +402,84 @@ onBeforeUpdate(() => {
     }
 });
 
+const handleBeforeAppy = () => {
+    if (!authContext.user) {
+        return false;
+    }
+    isShowApplyConfirm.value = true;
+    const cvLists = authContext.user.cvPaths;
+    cvPaths.value = [...cvLists];
+};
+
+const checkExpiredRecruitment = () => {
+    const now = new Date();
+    const utcNow = new Date(
+        Date.UTC(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            now.getHours(),
+            now.getMinutes(),
+            now.getSeconds()
+        )
+    );
+    const expiredDate = new Date(data.value.expiredDate + "Z");
+    if (expiredDate < utcNow) {
+        return false;
+    }
+    return true;
+};
+
+const handleSaveRecruitment = async () => {
+    await RecruitmentService.saveRecruitment(data.value.id);
+    data.value.isSaveByUser = !data.value.isSaveByUser;
+    if (data.value.isSaveByUser) {
+        toast.add({
+            severity: "success",
+            summary: "Lưu tin thành công",
+            detail: "Truy cập: Việc làm của bạn >> Công việc của tôi >> Việc đã lưu để xem danh sách",
+            life: 3000,
+        });
+    }
+};
+
 const handleApplyRecruit = async () => {
-    setLoading(true);
-    const payload = { recruitmentId: data.value.id };
-    await RecruitmentService.createUserRecruitment(payload);
-    setLoading(false);
-    toast.add({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Nộp đơn ứng tuyển thành công",
-        life: 3000,
-    });
+    if (!selectedCv.value) {
+        messageError.value = true;
+        setTimeout(() => {
+            messageError.value = false;
+        }, 3000);
+        return;
+    }
+    try {
+        setLoading(true);
+        const payload = {
+            recruitmentId: data.value.id,
+            introduce: introduce.value,
+            cvApplyLink: selectedCv.value,
+        };
+        await RecruitmentService.createUserRecruitment(payload);
+        toast.add({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Nộp đơn ứng tuyển thành công",
+            life: 3000,
+        });
+    } catch (error) {
+        if (error.status === 400) {
+            toast.add({
+                severity: "error",
+                summary: "Thất bại",
+                detail: error?.response?.data?.Message || "Lỗi nhập liệu",
+                life: 3000,
+            });
+        } else {
+            throw new AxiosError(error);
+        }
+    } finally {
+        setLoading(false);
+        isShowApplyConfirm.value = false;
+    }
 };
 
 const handleSalaryData = () => {
@@ -386,9 +527,9 @@ const handleLevelData = () => {
 
 const handleProvinceData = () => {
     if (data.value.isDifferentAddess) {
-        return data.company.provinceName;
+        return data.value.company.provinceName;
     } else {
-        return data.provinceName;
+        return data.value.provinceName;
     }
 };
 
@@ -580,5 +721,21 @@ const handleExperienceData = () => {
     background-color: #fff;
     border-radius: 8px;
     padding: 16px;
+}
+
+.cv-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cv-list-container .cv-list-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.cv-list-container .cv-list-item a:hover {
+    color: #10b981 !important;
 }
 </style>

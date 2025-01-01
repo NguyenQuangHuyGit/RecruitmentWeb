@@ -139,7 +139,9 @@
                                 <div
                                     class="recruitment-control-save"
                                     v-tooltip.top="'Lưu tin tuyển dụng'"
-                                    @click.stop="handleSaveRecruiment(item, index)"
+                                    @click.stop="
+                                        handleSaveRecruiment(item, index)
+                                    "
                                 >
                                     <i
                                         v-if="item.isSaveByUser"
@@ -218,6 +220,8 @@ const handleHideOp = () => {
 const displayRecruit = async (e, data) => {
     handleHideOp();
     selectedRecruitmentTemp.value = data;
+    console.log(data);
+
     nextTick(() => {
         op.value.show(e);
     });
@@ -285,15 +289,19 @@ const handleSaveRecruiment = async (data, index) => {
             life: 3000,
         });
     }
-}
+};
 
 const events = computed(() => {
     const result = [
         {
             status: "Ứng tuyển",
-            date: Common.formatDate(
+            date: `${Common.formatTime(
                 selectedRecruitmentTemp.value.userRecruitment.applyDate
-            ).result,
+            )} ${
+                Common.formatDate(
+                    selectedRecruitmentTemp.value.userRecruitment.applyDate
+                ).result
+            }`,
             active: true,
         },
     ];
@@ -301,9 +309,13 @@ const events = computed(() => {
     if (selectedRecruitmentTemp.value.userRecruitment.status >= 1) {
         result.push({
             status: "NTD xem hồ sơ",
-            date: Common.formatDate(
+            date: `${Common.formatTime(
                 selectedRecruitmentTemp.value.userRecruitment.openCvDate
-            ).result,
+            )} ${
+                Common.formatDate(
+                    selectedRecruitmentTemp.value.userRecruitment.openCvDate
+                ).result
+            }`,
             active:
                 selectedRecruitmentTemp.value.userRecruitment.openCvDate !==
                 null,
@@ -313,14 +325,27 @@ const events = computed(() => {
     if (selectedRecruitmentTemp.value.userRecruitment.status >= 2) {
         result.push({
             status: "NTD đánh giá hồ sơ",
-            date: Common.formatDate(
+            date: `${Common.formatTime(
                 selectedRecruitmentTemp.value.userRecruitment.changeStateDate
-            ).result,
+            )} ${
+                Common.formatDate(
+                    selectedRecruitmentTemp.value.userRecruitment
+                        .changeStateDate
+                ).result
+            }`,
             active:
                 selectedRecruitmentTemp.value.userRecruitment
                     .changeStateDate !== null,
         });
     }
+
+    // if (selectedRecruitmentTemp.value.userRecruitment.status >= 2 && selectedRecruitmentTemp.value.userRecruitment
+    // .changeStateDate !== null) {
+    //     result.push({
+    //         status: "NTD đánh giá hồ sơ",
+    //         active: true,
+    //     });
+    // }
     return result;
 });
 </script>
